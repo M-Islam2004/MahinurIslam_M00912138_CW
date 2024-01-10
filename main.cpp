@@ -29,8 +29,8 @@ void ShowMenu()
 }
 int main()
 {
-	cout << readBooksFromCSV(books) << endl;
 	Librarian librarian;
+	cout << librarian.readBooksFromCSV(books) << endl;
 	int memberID, bookID;
 	while (1)
 	{

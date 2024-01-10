@@ -82,6 +82,42 @@ public:
 		}
 	}
 
+	int CalcFine(Date date)
+	{
+		std::time_t currentTime = std::time(nullptr);
+		std::tm* localTime = std::localtime(&currentTime);
+
+		int year = localTime->tm_year + 1900;
+		int month = localTime->tm_mon + 1;
+		int day = localTime->tm_mday;
+
+
+		Date dueDate = date;
+
+
+		std::tm date1 = {};
+		date1.tm_year = year - 1900;
+		date1.tm_mon = month;
+		date1.tm_mday = day;
+
+				
+		std::tm date2 = {};
+		date2.tm_year = dueDate.getYear() - 1900;
+		date2.tm_mon = dueDate.getMonth();
+		date2.tm_mday = dueDate.getDay();
+
+		std::time_t time2 = std::mktime(&date2);
+
+		std::tm* tm_diff = std::gmtime(&time2);
+		tm_diff->tm_year -= date1.tm_year;
+		tm_diff->tm_mon -= date1.tm_mon;
+		tm_diff->tm_mday -= date1.tm_mday;
+
+
+		int days = tm_diff->tm_year * 365 + tm_diff->tm_mon * 12 + tm_diff->tm_mday;
+		return days;
+	}
+	
 	void returnBook(int memberID, int bookID)
 	{
 		map<int, Member>::iterator itr = members.find(memberID);
@@ -91,52 +127,34 @@ public:
 
 			if (itr2 != books.end())
 			{
+				vector<int> loanedBooks = itr->second.getBooksBorrowed();
 
-				std::time_t currentTime = std::time(nullptr);
-				std::tm* localTime = std::localtime(&currentTime);
+				auto position = std::find(loanedBooks.begin(), loanedBooks.end(), bookID);
 
-				int year = localTime->tm_year + 1900;
-				int month = localTime->tm_mon + 1;
-				int day = localTime->tm_mday;
-
-
-				Date dueDate = itr2->second.getDueDate();
-
-
-				std::tm date1 = {};
-				date1.tm_year = year - 1900;
-				date1.tm_mon = month;
-				date1.tm_mday = day;
-
-				
-				std::tm date2 = {};
-				date2.tm_year = dueDate.getYear() - 1900;
-				date2.tm_mon = dueDate.getMonth();
-				date2.tm_mday = dueDate.getDay();
-
-				std::time_t time2 = std::mktime(&date2);
-
-				std::tm* tm_diff = std::gmtime(&time2);
-				tm_diff->tm_year -= date1.tm_year;
-				tm_diff->tm_mon -= date1.tm_mon;
-				tm_diff->tm_mday -= date1.tm_mday;
-
-
-				int days = tm_diff->tm_year * 365 + tm_diff->tm_mon * 12 + tm_diff->tm_mday;
-
-				if (days < 0)
+				if (position != loanedBooks.end()) 
 				{
-					cout << "Fine: " << days * (-1) << endl;
-				}
-                else
-                {
-                    cout << "The book has been returned on time." << endl;
-                    cout << "Due Date: " << to_string(itr2->second.getDueDate().getDay()) << "/" << to_string(itr2->second.getDueDate().getMonth()) << "/" << to_string(itr2->second.getDueDate().getYear()) << endl;
-                }
-				itr->second.returnBook(bookID);
-				itr2->second.returnBook(memberID);
+					int days = CalcFine(itr2->second.getDueDate());
+					if (days < 0)
+					{
+						cout << "Fine: " << days * (-1) << endl;
+					}
+                	else
+                	{
+                    	cout << "The book has been returned on time." << endl;
+                    	cout << "Due Date: " << to_string(itr2->second.getDueDate().getDay()) << "/" << to_string(itr2->second.getDueDate().getMonth()) << "/" << to_string(itr2->second.getDueDate().getYear()) << endl;
+                	}
+					itr->second.returnBook(bookID);
+					itr2->second.returnBook(memberID);
 
-				cout << "Book returned" << endl;
+					cout << "Book returned" << endl;
+				}
+				else
+				{
+					cout << "Book ID: " << bookID << " not borrowed by member ID: " << memberID << endl;
+				}
+				
+				
+				
 			}
 			else
 			{
@@ -184,9 +202,27 @@ public:
 		cout << endl;
 	}
 
-};
+	int GetSalary()
+	{
+		return salary;
+	}
 
-string readBooksFromCSV(map<int, Book>& books) {
+	void SetSalary(int s)
+	{
+		salary = s;
+	}
+
+	int GetStaffID()
+	{
+		return staffID;
+	}
+
+	void SetStaffID(int s)
+	{
+		staffID = s;
+	}
+
+	string readBooksFromCSV(map<int, Book>& books) {
 	ifstream file("library_books.csv");
 	if (!file.is_open()) {
 		return "Error opening file: library_books.csv";
@@ -216,3 +252,4 @@ string readBooksFromCSV(map<int, Book>& books) {
 	file.close();
     return "File successfully read library_books.csv";
 }
+};
