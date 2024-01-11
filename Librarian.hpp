@@ -84,37 +84,41 @@ public:
 
 	int CalcFine(Date date)
 	{
-		std::time_t currentTime = std::time(nullptr);
-		std::tm* localTime = std::localtime(&currentTime);
 
-		int year = localTime->tm_year + 1900;
-		int month = localTime->tm_mon + 1;
-		int day = localTime->tm_mday;
+		Date currentDate;
+    	currentDate.getUserInputDate();
 
+    	int year = currentDate.getYear();
+    	int month = currentDate.getMonth();
+    	int day = currentDate.getDay();	
+	
+    	Date dueDate = date;
 
-		Date dueDate = date;
+	
+    	std::tm date1 = {};
+    	date1.tm_year = year - 1900;
+    	date1.tm_mon = month - 1; // Adjust month to be in the range [0, 11]
+    	date1.tm_mday = day;
 
+    	std::tm date2 = {};
+    	date2.tm_year = dueDate.getYear() - 1900;
+    	date2.tm_mon = dueDate.getMonth() - 1; // Adjust month
+    	date2.tm_mday = dueDate.getDay();
 
-		std::tm date1 = {};
-		date1.tm_year = year - 1900;
-		date1.tm_mon = month;
-		date1.tm_mday = day;
+    	std::time_t time1 = std::mktime(&date1);
+    	std::time_t time2 = std::mktime(&date2);
 
-				
-		std::tm date2 = {};
-		date2.tm_year = dueDate.getYear() - 1900;
-		date2.tm_mon = dueDate.getMonth();
-		date2.tm_mday = dueDate.getDay();
+    	if (time1 == -1 || time2 == -1) {
+        	// Handle error in mktime
+        	std::cerr << "Error in mktime" << std::endl;
+        	return -1; // Indicate error
+    	}
 
-		std::time_t time2 = std::mktime(&date2);
+    	std::time_t timeDiff = time2 - time1;
+    	int days = timeDiff / (60 * 60 * 24);
 
-		std::tm* tm_diff = std::gmtime(&time2);
-		tm_diff->tm_year -= date1.tm_year;
-		tm_diff->tm_mon -= date1.tm_mon;
-		tm_diff->tm_mday -= date1.tm_mday;
-
-
-		int days = tm_diff->tm_year * 365 + tm_diff->tm_mon * 12 + tm_diff->tm_mday;
+		cout << "Due Date: " << dueDate.getYear() << " " << dueDate.getMonth() << " " << dueDate.getDay() << endl;
+		cout << "Returned Date: " << currentDate.getYear() << " " << currentDate.getMonth() << " " << currentDate.getDay() << endl;
 		return days;
 	}
 	
